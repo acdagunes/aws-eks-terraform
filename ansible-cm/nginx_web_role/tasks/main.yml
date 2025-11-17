@@ -1,0 +1,22 @@
+---
+
+
+# TASK 1: Nginx-ის პაკეტის ინსტალაცია
+- name: Ensure Nginx package is installed
+  ansible.builtin.dnf:
+    name: nginx
+    state: present
+
+# TASK 2: Nginx-ის სერვისის გაშვება და ჩართვა (enable)
+- name: Ensure Nginx service is started and enabled
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: yes
+
+
+
+
+
+
+# tasks file for nginx_web_role

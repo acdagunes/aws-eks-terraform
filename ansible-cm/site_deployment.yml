@@ -1,0 +1,7 @@
+---
+- name: Deploy Nginx web server using a Role
+  hosts: localhost
+  gather_facts: yes
+  become: yes
+  roles:
+    - nginx_web_role
