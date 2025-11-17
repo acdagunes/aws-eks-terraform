@@ -1,16 +1,33 @@
-# 1. Provider Configuration (ადგილობრივი ფაილური სისტემის მართვის პროვაიდერი)
+# Terraform-ის მოთხოვნები: საჭირო პროვაიდერების განსაზღვრა
 terraform {
   required_providers {
-    local = {
-      source  = "hashicorp/local"
-      version = "2.5.1" 
+    docker = {
+      source = "kreuzwerker/docker"
+      version = ">= 3.0.1" # ვიყენებთ სტაბილურ ვერსიას
     }
   }
 }
 
-# 2. Resource Definition (ახალი ფაილის შექმნა)
-resource "local_file" "devops_config" {
-  filename        = "${path.module}/devops.txt"
-  content         = "Terraform is managing this content."
-  file_permission = "0600"
+# Docker Provider-ის კონფიგურაცია
+# Terraform ავტომატურად უკავშირდება Unix სოკეტს: unix:///var/run/docker.sock
+provider "docker" {}
+
+# რესურსი 1: Docker Image (Nginx-ის იმიჯის მოზიდვა)
+resource "docker_image" "nginx_image" {
+  name = "nginx:latest"
+  keep_locally = true # იმიჯი დარჩება ლოკალურად
+}
+
+# რესურსი 2: Docker Container (Nginx-ის კონტეინერის გაშვება)
+resource "docker_container" "nginx_container" {
+  name  = "terraform_nginx_v7.0.0"
+  image = docker_image.nginx_image.name
+  
+  # ჰოსტის პორტი 8081 გადამისამართებულია კონტეინერის პორტზე 80
+  ports {
+    internal = 80
+    external = 8082
+  }
+
+  restart = "always"
 }
