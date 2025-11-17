@@ -25,7 +25,10 @@ jobs:
 
       - name: Check Docker Image
         run: docker image ls | grep simple-nginx-image
-        
+      - name: Check Current Path
+        run: pwd
+      - name: List Files
+        run: ls -R
       # ----------------------------------------------------
       # ეტაპი 2: Ansible (Syntax Check - CI)
       # ----------------------------------------------------
