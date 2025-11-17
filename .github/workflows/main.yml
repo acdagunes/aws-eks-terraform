@@ -12,7 +12,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4 # კოდის გადმოწერა
-
+      - name: Configure Docker Permissions
+        run: sudo chown "$USER":docker "$DOCKER_HOST" || true
       # ----------------------------------------------------
       # ეტაპი 1: Docker (Build & Check - CI)
       # ----------------------------------------------------
