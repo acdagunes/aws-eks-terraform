@@ -11,13 +11,15 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest # ვიყენებთ GitHub-ის ვირტუალურ სერვერს
+
     defaults:
       run:
         working-directory: devops-lab
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4 # კოდის გადმოწერა
-
+     
       # ----------------------------------------------------
       # ეტაპი 1: Docker (Build & Check - CI)
       # ----------------------------------------------------
