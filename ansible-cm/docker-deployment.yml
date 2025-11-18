@@ -61,22 +61,16 @@
         path: /etc/apt/keyrings/docker.asc
         state: absent
       tags: install_docker
-    - name: Install Python Docker SDK (using apt to avoid externally-managed error)
+   - name: Install Docker Engine and Python SDK (Final attempt with cache update)
       ansible.builtin.apt:
-        name: python3-docker
-        state: present
-        update_cache: yes # <--- დაამატეთ ეს ოფცია აქ!
-      tags: install_deps
-    
-    
-    - name: Install Docker Engine
-      ansible.builtin.package:
         name:
           - docker-ce
           - docker-ce-cli
           - containerd.io
+          - python3-docker # <--- დავამატეთ Python SDK აქ
         state: present
-      tags: install_docker 
+        update_cache: yes # <--- იძულებით განაახლებს ქეშს ინსტალაციამდე
+      tags: install_docker
     - name: Start Docker service
       ansible.builtin.service:
         name: docker
@@ -89,6 +83,6 @@
         image: nginx:latest
         state: started
         ports:
-          - "80:80" # შევცვალოთ 8080-ით 80-ზე, რათა გამოვიყენოთ სტანდარტული HTTP პორტი
+          - "80:8082" # შევცვალოთ 8080-ით 80-ზე, რათა გამოვიყენოთ სტანდარტული HTTP პორტი
         restart_policy: always
       tags: deploy
