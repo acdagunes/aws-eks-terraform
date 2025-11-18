@@ -25,9 +25,10 @@
     # --------------------------------------------------------------------------
     # ეტაპი 2: Python Docker SDK-ის ინსტალაცია (Droplet-ზე)
     # --------------------------------------------------------------------------
-    - name: Install Python Docker SDK (required for docker_container module)
-      ansible.builtin.pip:
-        name: docker
+    - name: Install Python Docker SDK (using apt to avoid externally-managed error)
+      ansible.builtin.apt:
+        # Ubuntu-ში python3-docker მოდული უზრუნველყოფს Docker SDK-ს
+        name: python3-docker
         state: present
       tags: install_deps
 
