@@ -19,16 +19,19 @@
     # --------------------------------------------------------------------------
     # ეტაპი 1: Ubuntu-ს წინაპირობების ინსტალაცია
     # --------------------------------------------------------------------------
-    - name: Update apt cache and install dependencies
+    - name: Force apt update using shell (for troubleshooting cache failure)
+      ansible.builtin.shell: apt update -y
+      tags: install_deps
+
+    - name: Install dependencies (curl, gnupg, etc.)
       ansible.builtin.apt:
         name: 
           - curl
           - gnupg
           - lsb-release
           - ca-certificates
-          - python3-pip # DNF-ის ნაცვლად ვიყენებთ APT-ს PIP-ისთვის
+          - python3-pip
         state: present
-        update_cache: yes
       tags: install_deps
       
     # --------------------------------------------------------------------------
