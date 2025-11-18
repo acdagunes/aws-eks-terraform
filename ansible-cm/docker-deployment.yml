@@ -61,16 +61,24 @@
         path: /etc/apt/keyrings/docker.asc
         state: absent
       tags: install_docker
-    - name: Install Docker Engine and Python SDK (Final attempt with cache update)
+   # --------------------------------------------------------------------------
+    # ეტაპი 5ა: Python SDK-ის ინსტალაცია
+    # --------------------------------------------------------------------------
+    - name: Install Python Docker SDK
+      ansible.builtin.apt:
+        name: python3-docker
+        state: present
+      tags: install_deps
+    - name: Install Docker Engine (Force update to find package)
       ansible.builtin.apt:
         name:
           - docker-ce
           - docker-ce-cli
           - containerd.io
-          - python3-docker # <--- დავამატეთ Python SDK აქ
         state: present
-        update_cache: yes # <--- იძულებით განაახლებს ქეშს ინსტალაციამდე
-      tags: install_docker
+        update_cache: yes # <--- APT მოდული იძულებით განაახლებს ქეშს
+        cache_valid_time: 300 # <--- ვადის ამოწურვა 5 წუთში
+      tags: install_docker   
     - name: Start Docker service
       ansible.builtin.service:
         name: docker
