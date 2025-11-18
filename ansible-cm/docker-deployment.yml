@@ -24,9 +24,7 @@
     # ეტაპი 1: Ubuntu-ს წინაპირობების ინსტალაცია
     # --------------------------------------------------------------------------
     # ამოცანა 1: იძულებით განახლება (APT-სთვის ინტერნეტი სჭირდება)
-    - name: Force apt update using shell (for base cache refresh)
-      ansible.builtin.shell: apt update -y
-      tags: install_deps
+   
     - name: Install dependencies (curl, gnupg, etc.)
       ansible.builtin.apt:
         name:
@@ -41,6 +39,7 @@
       ansible.builtin.apt:
         name: python3-docker
         state: present
+        update_cache: yes # <--- დაამატეთ ეს ოფცია აქ!
       tags: install_deps
     - name: Set up Docker's official GPG key and repository
       ansible.builtin.shell: |
