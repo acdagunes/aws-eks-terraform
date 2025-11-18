@@ -44,6 +44,9 @@
           "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
           {{ ansible_distribution_release }} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
       tags: install_docker   
+    - name: Force apt update to resolve key conflicts (using shell)
+      ansible.builtin.shell: apt update -y
+      tags: install_docker
     - name: Install Python Docker SDK (using apt to avoid externally-managed error)
       ansible.builtin.apt:
         name: python3-docker
@@ -51,10 +54,7 @@
         update_cache: yes # <--- დაამატეთ ეს ოფცია აქ!
       tags: install_deps
     
-    - name: Force APT Update after setting up repo
-      ansible.builtin.apt:
-        update_cache: yes
-      tags: install_docker
+    
     - name: Install Docker Engine
       ansible.builtin.package:
         name:
