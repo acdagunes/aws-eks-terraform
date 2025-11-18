@@ -76,6 +76,11 @@
         name: python3-docker
         state: present
       tags: install_deps
+    - name: Force APT cache update after adding Docker repository
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 300
+      tags: install_docker
     - name: Install Docker Engine (Force update to find package)
       ansible.builtin.apt:
         name:
