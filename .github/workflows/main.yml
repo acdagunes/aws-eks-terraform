@@ -57,5 +57,17 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -input=false
         working-directory: terraform-iac
-        if: always()  
+        if: always() 
+       
         # ეს ეტაპი ამოწმებს, თუ რა შეიცვლება, მაგრამ არ ატარებს apply-ს CI-ს ფარგლებში
+      - name: Setup SSH Agent for Deployment
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+          
+      - name: Add Ansible Host Dependencies
+        run: ssh-keyscan 159.89.31.173 >> ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
+        
+      - name: Run Ansible Deployment Playbook
+        run: ansible-playbook ansible-cm/docker-deployment.yml -i ansible-cm/inventory.ini -u root
+        # იყენებს root მომხმარებელს Droplet-ზე 
