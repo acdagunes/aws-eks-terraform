@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ansible Nginx Deployment</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f0f0; text-align: center; padding-top: 50px; }
+        .container { background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); display: inline-block; }
+        h1 { color: #333; }
+        p { color: #555; }
+        .success { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Deployment Successful!</h1>
+        <p class="success">Nginx container is running on Droplet!</p>
+        <p>Managed by Ansible on {{ ansible_date_time.date }} from Rocket Linux.</p>
+        <p>Serving port: {{ nginx_port_external }}</p>
+    </div>
+</body>
+</html>

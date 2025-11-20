@@ -1,0 +1,9 @@
+---
+# ansible-cm/roles/nginx_web/vars/main.yml
+# -------------------------------------------------------------
+# Nginx-ის ცვლადები (Variables)
+# -------------------------------------------------------------
+
+nginx_port: 80 # Nginx-ის პორტი კონტეინერის შიგნით (Template-ისთვის)
+nginx_root_path: /usr/share/nginx/html # Nginx-ის Root დირექტორია (Template-ისთვის)
+nginx_port_external: 8082 # <-- დავამატეთ გარე პორტი
