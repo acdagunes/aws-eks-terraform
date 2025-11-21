@@ -1,71 +1,74 @@
-name: CI/CD Pipeline
+# .github/workflows/main.yml
+# Full CI/CD Pipeline: Provision Infrastructure (Terraform) -> Configure/Deploy (Ansible) -> Destroy (Cleanup)
+
+name: 'Full IaC & Configuration Deployment'
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-      
+  workflow_dispatch: # საშუალებას იძლევა, ხელით გაეშვას
+
 jobs:
-  build-and-deploy:
+  deploy_web_service:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout Code
+      - name: 1. Checkout Code
         uses: actions/checkout@v4
-        
-      # ----------------------------------------------------
-      # ეტაპი 1: Docker (Build & Check - CI)
-      # ----------------------------------------------------
-      - name: Build Docker Image
-        run: docker build -t simple-nginx-image . 
-        
-      - name: Check Docker Image
-        run: docker image ls | grep simple-nginx-image
-        
-      # ----------------------------------------------------
-      # ეტაპი 2: Terraform (Init & Plan - CI)
-      # ----------------------------------------------------
-      - name: Setup Terraform CLI
+
+      # --- ეტაპი 1: Terraform (Provisioning) ---
+      
+      - name: 2. Setup Terraform CLI
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.6.x 
-          
-      - name: Terraform Init
-        id: init
-        run: terraform init # პროვაიდერების ჩამოსატვირთად
+          terraform_version: 1.6.x
+
+      - name: 3. Terraform Init
+        run: terraform init
         working-directory: terraform-iac
-        
-      - name: Terraform Plan
-        run: terraform plan -input=false
-        working-directory: terraform-iac 
-        if: always() # გაუშვით ყოველთვის, მაშინაც კი, თუ წინა ნაბიჯი ჩავარდა
-        
-      # ----------------------------------------------------
-      # ეტაპი 3: Ansible (Syntax Check & Deployment - CD)
-      # ----------------------------------------------------
-      - name: Install Ansible
-        run: pip install ansible
-        
-      - name: Check Ansible Playbook Syntax
-        # ინვენტარის ფაილის სახელი გასწორებულია: inventory.ini
-        run: ansible-playbook ansible-cm/docker-deployment.yml --syntax-check -i ansible-cm/inventory.ini 
-        
-      - name: Setup SSH Agent for Deployment
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+
+      - name: 4. Terraform Apply (Create Droplet)
+        id: apply
+        run: terraform apply -auto-approve
+        working-directory: terraform-iac
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+
+      - name: 5. Get Droplet IP Address
+        id: output
+        run: |
+          cd terraform-iac
+          # IP-ის მიღება Terraform output-დან და შენახვა env-ში
+          DROPLET_IP=$(terraform output -raw web_droplet_ip)
+          echo "DROPLET_IP=$DROPLET_IP" >> $GITHUB_ENV
+
+      # --- ეტაპი 2: Ansible (Configuration) ---
+
+      - name: 6. Setup SSH Agent and Key
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+          # ეს Secret უნდა შეიცავდეს შენი Private SSH Key-ის შიგთავსს!
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           
-      - name: Install Ansible Docker Collection
-        # კოლექციის ინსტალაცია, რათა docker_container მოდული იქნას ნაპოვნი
-        run: ansible-galaxy collection install community.docker
-          
-      - name: Add Ansible Host Dependencies
-        # SSH Host Key-ს დამატება ცნობილ ჰოსტებში
-        run: ssh-keyscan 159.89.31.173 >> ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
-          
-      - name: Run Ansible Deployment Playbook
-        # უშვებს დეპლოიმენტს Droplet-ზე root მომხმარებლით
-        run: ansible-playbook ansible-cm/docker-deployment.yml -i ansible-cm/inventory.ini -u root
+      - name: 7. Install Ansible & Dependencies
+        run: pip install ansible
+
+      - name: 8. Update Ansible Inventory (Dynamically)
+        run: |
+          # IP მისამართის ჩასწორება inventory.ini-ში
+          sed -i "s/ansible_host=.*/ansible_host=${{ env.DROPLET_IP }}/" ansible-cm/inventory.ini
+
+      - name: 9. Run Ansible Playbook (Deployment)
+        run: ansible-playbook ansible-cm/docker-deployment.yml -i ansible-cm/inventory.ini
+
+      # --- ეტაპი 3: Cleanup ---
+
+      - name: 10. Terraform Destroy (Cleanup Infrastructure)
+        if: always() # უზრუნველყოფს, რომ Destroy ყოველთვის გაეშვება, თუნდაც წინა ნაბიჯი ჩავარდეს
+        run: terraform destroy -auto-approve
+        working-directory: terraform-iac
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
