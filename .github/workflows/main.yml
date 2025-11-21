@@ -27,8 +27,8 @@ jobs:
       - name: 3. Terraform Init
         run: terraform init
         working-directory: terraform-iac
-        env:
-          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+      #  env:
+      #    DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
 
       - name: 4. Terraform Apply (Create Droplet)
         id: apply
