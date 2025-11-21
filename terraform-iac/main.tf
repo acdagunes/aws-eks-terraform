@@ -1,6 +1,7 @@
 # main.tf (DigitalOcean-ის რესურსები)
 
-# 1. Terraform-ის მოთხოვნები (DigitalOcean Provider-ის დამატება)
+# terraform-iac/main.tf (განახლებული)
+
 terraform {
   required_providers {
     digitalocean = {
@@ -10,13 +11,21 @@ terraform {
   }
 }
 
-# 2. DigitalOcean Provider-ის კონფიგურაცია
-# პროვაიდერი ავტომატურად გამოიყენებს DIGITALOCEAN_TOKEN გარემო ცვლადს
-provider "digitalocean" {}
+# დაამატე ცვლადი, რომელიც მიიღებს Token-ს GitHub Actions-დან
+variable "do_token" {
+  description = "DigitalOcean API Token from GitHub Secrets"
+  type        = string
+  sensitive   = true # უზრუნველყოფს, რომ არ გამოჩნდეს ლოგებში
+}
 
-# 3. SSH გასაღების მონაცემების მოზიდვა (თუ უკვე გაქვს ატვირთული DO-ზე)
+# 2. DigitalOcean Provider-ის კონფიგურაცია
+# ახლა Token-ს ექსპლიციტურად გადავცემთ ცვლადის მეშვეობით
+provider "digitalocean" {
+  token = var.do_token 
+}
+
+# 3. SSH გასაღების მონაცემების მოზიდვა (იყენებს ახალ პროვაიდერს)
 data "digitalocean_ssh_key" "my_ssh_key" {
-  # !!! ჩაანაცვლე "ssh-key-name" შენი DigitalOcean-ზე ატვირთული SSH გასაღების ზუსტი სახელით!
   name = "Nikoloz_Local_Machine"
 }
 

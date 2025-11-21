@@ -32,10 +32,10 @@ jobs:
 
       - name: 4. Terraform Apply (Create Droplet)
         id: apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var="do_token=${{ secrets.DIGITALOCEAN_TOKEN }}"
         working-directory: terraform-iac
-        env:
-          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+      #  env:
+      #    DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
 
       - name: 5. Get Droplet IP Address
         id: output
@@ -68,7 +68,7 @@ jobs:
 
       - name: 10. Terraform Destroy (Cleanup Infrastructure)
         if: always() # უზრუნველყოფს, რომ Destroy ყოველთვის გაეშვება, თუნდაც წინა ნაბიჯი ჩავარდეს
-        run: terraform destroy -auto-approve
+        run: terraform destroy -auto-approve -auto-approve -var="do_token=${{ secrets.DIGITALOCEAN_TOKEN }}"
         working-directory: terraform-iac
-        env:
-          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+       # env:
+       #   DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
