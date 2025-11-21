@@ -44,6 +44,9 @@ jobs:
           # IP-ის მიღება Terraform output-დან და შენახვა env-ში
           DROPLET_IP=$(terraform output -raw web_droplet_ip)
           echo "DROPLET_IP=$DROPLET_IP" >> $GITHUB_ENV
+      - name: 5.5 Wait for Droplet to fully initialize SSH
+        run: sleep 30 # დაველოდოთ 30 წამს, სანამ Droplet-ი სრულად ჩაიტვირთება
+ 
 
       # --- ეტაპი 2: Ansible (Configuration) ---
 
