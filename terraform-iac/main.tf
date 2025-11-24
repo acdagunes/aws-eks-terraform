@@ -109,11 +109,10 @@ resource "kubernetes_deployment" "nginx_deployment" {
       }
     }
   }
-  depends_on = [digitalocean_kubernetes_cluster.k8s_cluster]
-  # ❗️ ამ data ბლოკს აუცილებლად დაამატებ main.tf-ის ბოლოს!
-data "digitalocean_kubernetes_cluster" "k8s_cluster" {
-  name = digitalocean_kubernetes_cluster.k8s_cluster.name
-  # ეს უზრუნველყოფს, რომ data ბლოკი მხოლოდ cluster-ის შექმნის შემდეგ გაეშვება
-  depends_on = [digitalocean_kubernetes_cluster.k8s_cluster] 
+   
 }
+data "digitalocean_kubernetes_cluster" "k8s_cluster" {
+  name = digitalocean_kubernetes_cluster.k8s_cluster.name
+  # ეს უზრუნველყოფს, რომ data ბლოკი მხოლოდ cluster-ის შექმნის შემდეგ გაეშვება
+  depends_on = [digitalocean_kubernetes_cluster.k8s_cluster] 
 }
