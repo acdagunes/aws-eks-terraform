@@ -12,6 +12,7 @@ jobs:
   deploy_web_service:
     runs-on: ubuntu-latest
     steps:
+    
       - name: 1. Checkout Code
         uses: actions/checkout@v4
 
