@@ -28,7 +28,7 @@ jobs:
           sudo mdkir -p /doctl1 && sudo wget -p /doctl1  https://github.com/digitalocean/doctl/releases/download/v1.146.0/doctl-1.146.0-linux-amd64.tar.gz
           
           # 2. ამოარქივება და გადატანა PATH-ში
-          sudo tar -xzvf /doctl/doctl-1.146.0-linux-amd64.tar.gz -C /usr/local/bin doctl-1.146.0-linux-amd64
+          sudo tar -xzvf /doctl1/doctl-1.146.0-linux-amd64.tar.gz -C /usr/local/bin doctl-1.146.0-linux-amd64
           
           # 3. ავთენტიფიკაცია
           doctl auth init --access-token ${{ secrets.DIGITALOCEAN_TOKEN }}   
