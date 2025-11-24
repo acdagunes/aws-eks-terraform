@@ -41,4 +41,4 @@ resource "digitalocean_kubernetes_cluster" "k8s_cluster" {
   }
 }  
  
-}
+
