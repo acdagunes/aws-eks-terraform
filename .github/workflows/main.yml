@@ -1,64 +1,72 @@
-# .GitHub/workloads/main.ymlaaaaa
-# ...
+# ეს არის GitHub Actions-ის Workflow ფაილი (main.yml)
+# ის ავტომატურად გაეშვება, როდესაც ხდება push main ან feature/aws-k8s-iac ბრენჩებზე.
 on:
   push:
     branches:
       - main
       - feature/aws-k8s-iac
+  # საშუალებას გვაძლევს, ხელით გავუშვათ Workflow
   workflow_dispatch:
 
 jobs:
   deploy_web_service:
     runs-on: ubuntu-latest
     steps:
+      # 1. კოდის გამოტანა რეპოზიტორიიდან
       - name: 1. Checkout Code
         uses: actions/checkout@v4
 
       # --- ეტაპი 1: Terraform (Provisioning) ---
       
+      # 2. Terraform CLI-ის კონფიგურაცია
       - name: 2. Setup Terraform CLI
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.x
+
+      # 3. Terraform Init (პროვაიდერების ინიციალიზაცია)
       - name: 3. Terraform Init
-        run: terraform init -backend=false
-        working-directory: terraform-iac
-        env: 
+        run: terraform init -backend=false
+        working-directory: terraform-iac
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }} 
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
+      # 4. Terraform Plan (ცვლილებების ნახვა)
+      - name: 4. Terraform Plan
+        run: terraform plan -input=false
+        working-directory: terraform-iac
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: 4. Terraform Plan
-        run: terraform plan -input=false
-        working-directory: terraform-iac
-        env: 
+      # 5. Terraform Apply (რესურსების შექმნა, EC2)
+      - name: 5. Terraform Apply (Create K8s Cluster) 
+        id: apply
+        run: terraform apply -auto-approve
+        working-directory: terraform-iac
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      - name: 5. Terraform Apply (Create K8s Cluster) 
-        id: apply
-        run: terraform apply -auto-approve
-        working-directory: terraform-iac
-        env: 
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # --- ეტაპი 2: Init Destroy-სთვის (საჭიროა State File-ის მისაღებად) ---
+      
+      # 9. Terraform Init (Destroy-ის დაწყებამდე)
       - name: 9. Terraform Init for Destroy
         if: always()
         run: terraform init 
         working-directory: terraform-iac
         env:
-
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          
       # --- ეტაპი 3: Cleanup ---
       
+      # 10. Terraform Destroy (რესურსების წაშლა)
       - name: 10. Terraform Destroy (Cleanup Infrastructure)
         if: always()
         run: terraform destroy -auto-approve 
-        working-destroy: terraform-iac
+        working-directory: terraform-iac # აუცილებელი პარამეტრი!
         env:
-
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
