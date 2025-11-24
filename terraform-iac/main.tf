@@ -8,6 +8,10 @@ terraform {
       source  = "digitalocean/digitalocean"
       version = "~> 2.0"
     }
+    kubernetes = { # ❗️ ეს აკლია
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
   }
 }
 
@@ -23,7 +27,16 @@ variable "do_token" {
 provider "digitalocean" {
   token = var.do_token 
 }
+# terraform-iac/main.tf (დაამატე ეს ბლოკი)
 
+# 3. Kubernetes Provider-ის კონფიგურაცია
+provider "kubernetes" {
+  # პარამეტრები მიიღება პირდაპირ DigitalOcean K8s კლასტერის რესურსის output-იდან
+  host                   = digitalocean_kubernetes_cluster.k8s_cluster.kube_config.0.host
+  client_certificate     = base64decode(digitalocean_kubernetes_cluster.k8s_cluster.kube_config.0.client_certificate)
+  client_key             = base64decode(digitalocean_kubernetes_cluster.k8s_cluster.kube_config.0.client_key)
+  cluster_ca_certificate = base64decode(digitalocean_kubernetes_cluster.k8s_cluster.kube_config.0.cluster_ca_certificate)
+}
 
 
 # 4. Droplet-ის შექმნა (IaC-ის მთავარი ნაწილი!)
@@ -43,4 +56,55 @@ resource "digitalocean_kubernetes_cluster" "k8s_cluster" {
   }
 }  
  
+# terraform-iac/main.tf (დაამატე ეს ბლოკი)
 
+resource "kubernetes_service" "nginx_loadbalancer" {
+  metadata {
+    name = "nginx-service"
+  }
+  spec {
+    selector = {
+      app = "nginx-web"
+    }
+    port {
+      port        = 80
+      target_port = 80
+      protocol    = "TCP"
+    }
+    type = "LoadBalancer"
+  }
+  # უზრუნველყოფს, რომ ეს მხოლოდ კლასტერის შექმნის შემდეგ გაეშვება
+  depends_on = [digitalocean_kubernetes_cluster.k8s_cluster] 
+}
+# terraform-iac/main.tf (დაამატე ეს ბლოკი)
+
+resource "kubernetes_deployment" "nginx_deployment" {
+  metadata {
+    name = "nginx-deployment"
+  }
+  spec {
+    replicas = 2
+    selector {
+      match_labels = {
+        app = "nginx-web"
+      }
+    }
+    template {
+      metadata {
+        labels = {
+          app = "nginx-web"
+        }
+      }
+      spec {
+        container {
+          name  = "nginx"
+          image = "nginx:latest"
+          port {
+            container_port = 80
+          }
+        }
+      }
+    }
+  }
+  depends_on = [digitalocean_kubernetes_cluster.k8s_cluster]
+}
