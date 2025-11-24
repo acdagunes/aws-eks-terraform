@@ -24,10 +24,7 @@ provider "digitalocean" {
   token = var.do_token 
 }
 
-# 3. SSH გასაღების მონაცემების მოზიდვა (იყენებს ახალ პროვაიდერს)
-data "digitalocean_ssh_key" "my_ssh_key" {
-  name = "Nikoloz_Local_Machine"
-}
+
 
 # 4. Droplet-ის შექმნა (IaC-ის მთავარი ნაწილი!)
 # terraform-iac/main.tf
@@ -43,8 +40,5 @@ resource "digitalocean_kubernetes_cluster" "k8s_cluster" {
     node_count = 1
   }
 }  
-  # SSH გასაღების მიბმა Droplet-ზე
-  ssh_keys = [
-    data.digitalocean_ssh_key.my_ssh_key.id
-  ]
+ 
 }
