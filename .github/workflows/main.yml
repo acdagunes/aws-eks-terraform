@@ -24,11 +24,15 @@ jobs:
 
       - name: 2.1 Install DigitalOcean CLI (doctl) 
         run: |
-          # 1. გადმოწერა (არქივის ნაცვლად პირდაპირი ბინარი)
-          sudo mdkir -p /doctl1 && sudo wget -p /doctl1  https://github.com/digitalocean/doctl/releases/download/v1.146.0/doctl-1.146.0-linux-amd64.tar.gz
+          curl -LO https://github.com/digitalocean/doctl/releases/download/v1.146.0/doctl-v1.146.0-linux-amd64.tar.gz
           
-          # 2. ამოარქივება და გადატანა PATH-ში
-          sudo tar -xzvf /doctl1/doctl-1.146.0-linux-amd64.tar.gz -C /usr/local/bin doctl-1.146.0-linux-amd64
+          # 2. ამოარქივება: tar xf ამოარქივებს მიმდინარე საქაღალდეში.
+          # არქივი ქმნის საქაღალდეს 'doctl-v1.146.0-linux-amd64'
+          tar xf doctl-v1.146.0-linux-amd64.tar.gz
+          
+          # 3. გადატანა PATH-ში: ბინარი ფაილი (doctl) საქაღალდეშია.
+          # საქაღალდის სახელის მიღება და ბინარის გადატანა
+          sudo mv doctl-v1.146.0-linux-amd64/doctl /usr/local/bin
           
           # 3. ავთენტიფიკაცია
           doctl auth init --access-token ${{ secrets.DIGITALOCEAN_TOKEN }}   
