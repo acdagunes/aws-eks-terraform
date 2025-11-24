@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/aws-k8s-iac
   workflow_dispatch:
 
 jobs:
