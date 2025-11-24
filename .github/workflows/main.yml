@@ -1,4 +1,4 @@
-# .github/workflows/main.yml
+# .github/workflows/main.ymlaaaaa
 # ...
 on:
   push:
@@ -25,11 +25,10 @@ jobs:
       - name: 2.1 Install DigitalOcean CLI (doctl) 
         run: |
           # 1. გადმოწერა (არქივის ნაცვლად პირდაპირი ბინარი)
-          wget https://github.com/digitalocean/doctl/releases/download/v1.146.0/doctl-1.146.0-linux-amd64.tar.gz
+          sudo mdkir -p /doctl1 && sudo wget -p /doctl1  https://github.com/digitalocean/doctl/releases/download/v1.146.0/doctl-1.146.0-linux-amd64.tar.gz
           
           # 2. ამოარქივება და გადატანა PATH-ში
-          tar xf ~/doctl-1.146.0-linux-amd64.tar.gz
-          sudo mv ~/doctl /usr/local/bin
+          sudo tar -xzvf /doctl/doctl-1.146.0-linux-amd64.tar.gz -C /usr/local/bin doctl-1.146.0-linux-amd64
           
           # 3. ავთენტიფიკაცია
           doctl auth init --access-token ${{ secrets.DIGITALOCEAN_TOKEN }}   
