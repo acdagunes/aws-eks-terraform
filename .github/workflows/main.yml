@@ -1,18 +1,15 @@
 # .github/workflows/main.yml
-# Full CI/CD Pipeline: Provision Infrastructure (Terraform) -> Configure/Deploy (Ansible) -> Destroy (Cleanup)
-
-name: 'Full IaC & Configuration Deployment'
-
+# ...
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # საშუალებას იძლევა, ხელით გაეშვა
+  workflow_dispatch:
+
 jobs:
   deploy_web_service:
     runs-on: ubuntu-latest
     steps:
-    
       - name: 1. Checkout Code
         uses: actions/checkout@v4
 
@@ -26,53 +23,39 @@ jobs:
       - name: 3. Terraform Init
         run: terraform init -backend=false -var="do_token=${{ secrets.DIGITALOCEAN_TOKEN }}"
         working-directory: terraform-iac
-      #  env:
-      #    DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
-
-      - name: 4. Terraform Apply (Create Droplet)
+      
+      - name: 4. Terraform Apply (Create K8s Cluster) # ❗️ შეიცვალა Droplet-დან
         id: apply
         run: terraform apply -auto-approve -var="do_token=${{ secrets.DIGITALOCEAN_TOKEN }}"
         working-directory: terraform-iac
-      #  env:
-      #    DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
-
-      - name: 5. Get Droplet IP Address
-        id: output
+        
+      # --- ეტაპი 2: Kubernetes Deployment ---
+      
+      - name: 5. Extract Kubeconfig and Save to File
+        id: kubeconfig
         run: |
+          # მივიღოთ kube_config output-ი
           cd terraform-iac
-          # IP-ის მიღება Terraform output-დან და შენახვა env-ში
-          DROPLET_IP=$(terraform output -raw web_droplet_ip)
-          echo "DROPLET_IP=$DROPLET_IP" >> $GITHUB_ENV
-      - name: 5.5 Wait for Droplet to fully initialize SSH
-        run: sleep 60 # დაველოდოთ 30 წამს, სანამ Droplet-ი სრულად ჩაიტვირთება
- 
-
-      # --- ეტაპი 2: Ansible (Configuration) ---
-
-      - name: 6. Setup SSH Agent and Key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          # ეს Secret უნდა შეიცავდეს შენი Private SSH Key-ის შიგთავსს!
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          KUBE_CONFIG=$(terraform output -raw kube_config)
           
-      - name: 7. Install Ansible & Dependencies
-        run: pip install ansible
+          # ჩავწეროთ Kubeconfig ფაილში
+          echo "$KUBE_CONFIG" > kubeconfig.yaml
+          
+          # ექსპორტი env-ში
+          echo "KUBECONFIG=$(pwd)/kubeconfig.yaml" >> $GITHUB_ENV
 
-      - name: 8. Update Ansible Inventory (Dynamically)
+      - name: 6. Setup Kubectl
+        uses: azure/setup-kubectl@v3 # kubectl CLI-ის დაყენება
+
+      - name: 7. Deploy Nginx to Kubernetes
         run: |
-          # IP მისამართის ჩასწორება inventory.ini-ში
-          sed -i "s/ansible_host=.*/ansible_host=${{ env.DROPLET_IP }}/" ansible-cm/inventory.ini
+          kubectl apply -f k8s-manifests/nginx-deployment.yaml --kubeconfig kubeconfig.yaml
+          kubectl apply -f k8s-manifests/nginx-service.yaml --kubeconfig kubeconfig.yaml
+        # შენიშვნა: ეს ეტაპი ჩავარდება k8s-manifests საქაღალდის გარეშე, მაგრამ Pipeline-ი იმუშავებს
 
-      - name: 9. Run Ansible Playbook (Deployment)
-        run: ansible-playbook ansible-cm/docker-deployment.yml -i ansible-cm/inventory.ini
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: False # ეს აგვარებს Host Key Verification Failed-ს
-          ANSIBLE_CONNECT_TIMEOUT: 60     # ზრდის ლოდინის დროს Droplet-ის ჩართვამდე  
       # --- ეტაპი 3: Cleanup ---
-  
-     - name: 10. Terraform Destroy (Cleanup Infrastructure)
-       if: always() # უზრუნველყოფს, რომ Destroy ყოველთვის გაეშვება, თუნდაც წინა ნაბიჯი ჩავარდეს
-       run: terraform destroy -auto-approve -var="do_token=${{ secrets.DIGITALOCEAN_TOKEN }}"
-       working-directory: terraform-iac
-       # env:
-       #   DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+      
+      - name: 10. Terraform Destroy (Cleanup Infrastructure)
+        if: always()
+        run: terraform destroy -auto-approve -var="do_token=${{ secrets.DIGITALOCEAN_TOKEN }}"
+        working-directory: terraform-iac
