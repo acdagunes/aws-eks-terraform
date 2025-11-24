@@ -32,7 +32,7 @@ provider "digitalocean" {
 resource "digitalocean_kubernetes_cluster" "k8s_cluster" {
   name    = "ansible-compose-k8s-cluster"
   region  = "fra1"
-  version = "1.28" # ან შენი სასურველი ვერსია
+  version = "1.30" # ან შენი სასურველი ვერსია
 
   node_pool {
     name       = "worker-pool"
