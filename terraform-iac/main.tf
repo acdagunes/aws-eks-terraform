@@ -1,4 +1,3 @@
-bash: line 1: c: command not found
 # main.tf (DigitalOcean-ის რესურსები)
 
 # terraform-iac/main.tf (განახლებული)
