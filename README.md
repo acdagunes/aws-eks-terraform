@@ -1,15 +1,15 @@
-# 🚀 AWS EKS Kubernetes Cluster with Terraform
+# 🚀 AWS EC2 Infrastructure with Terraform & Ansible
 
-Production-ready Amazon EKS infrastructure using Terraform and Ansible for automated Kubernetes cluster deployment.
+Automated AWS infrastructure provisioning using Terraform and configuration management with Ansible for Docker-based web deployment.
 
 ## 🌟 Project Overview
 
-This project demonstrates enterprise-grade AWS infrastructure provisioning:
+This project demonstrates production-grade AWS infrastructure automation:
 
-- **Infrastructure as Code (IaC):** Complete AWS resources managed with Terraform
-- **Configuration Management:** Automated cluster configuration with Ansible
-- **Container Orchestration:** Kubernetes (EKS) for scalable deployments
-- **Security Best Practices:** IAM roles, Security Groups, private subnets
+- **Infrastructure as Code (IaC):** AWS resources managed with Terraform
+- **Configuration Management:** Automated server setup with Ansible
+- **Containerization:** Docker-based Nginx web server deployment
+- **Security Best Practices:** VPC isolation, Security Groups, encrypted volumes
 
 ## 🛠️ Technology Stack
 
@@ -17,36 +17,42 @@ This project demonstrates enterprise-grade AWS infrastructure provisioning:
 |-----------|------|---------|
 | **Cloud** | AWS | Cloud infrastructure provider |
 | **IaC** | Terraform | Infrastructure provisioning |
-| **Container Orchestration** | Amazon EKS | Managed Kubernetes service |
-| **Configuration Management** | Ansible | Cluster configuration |
-| **Networking** | AWS VPC | Network isolation and security |
+| **CM** | Ansible | Server configuration & deployment |
+| **Container** | Docker | Application containerization |
+| **Web Server** | Nginx | Reverse proxy / web server |
+| **OS** | Ubuntu 22.04 LTS | Server operating system |
 
 ## 🏗️ Infrastructure Components
 
 ### AWS Resources Created:
 
-- **VPC** — Custom Virtual Private Cloud with public/private subnets
-- **EKS Cluster** — Managed Kubernetes control plane
-- **EC2 Node Groups** — Worker nodes for running workloads
-- **IAM Roles & Policies** — Secure access management
-- **Security Groups** — Network-level firewall rules
-- **NAT Gateway** — Outbound internet for private subnets
+- **VPC** — Custom Virtual Private Cloud (10.0.0.0/16)
+- **Public Subnet** — For EC2 instance with public IP
+- **Internet Gateway** — Outbound internet access
+- **Route Table** — Traffic routing configuration
+- **Security Group** — Firewall rules (SSH, HTTP, HTTPS)
+- **EC2 Instance** — Ubuntu server with Docker
 
 ## 📁 Project Structure
+
 ```
-aws-eks-terraform/
+aws-ec2-terraform/
 ├── terraform-iac/
-│   ├── main.tf              # Main Terraform configuration
+│   ├── main.tf              # Main infrastructure configuration
 │   ├── variables.tf         # Input variables
-│   ├── outputs.tf           # Output values
-│   ├── vpc.tf               # VPC configuration
-│   ├── eks.tf               # EKS cluster configuration
-│   ├── iam.tf               # IAM roles and policies
-│   └── security-groups.tf   # Security group rules
+│   └── outputs.tf           # Output values
 ├── ansible-cm/
-│   ├── playbook.yml         # Ansible playbook
-│   └── inventory/           # Host configuration
+│   ├── docker-deployment.yml    # Main playbook
+│   ├── inventory.ini            # Host configuration
+│   └── roles/
+│       ├── docker/              # Docker installation role
+│       │   └── tasks/main.yml
+│       └── nginx_web/           # Nginx deployment role
+│           ├── tasks/main.yml
+│           └── templates/
 ├── .github/workflows/       # CI/CD pipeline
+├── Dockerfile
+├── docker-compose.yml
 └── README.md
 ```
 
@@ -54,64 +60,91 @@ aws-eks-terraform/
 
 ### Prerequisites
 
-1. **AWS CLI** configured with appropriate credentials
+1. **AWS CLI** configured with credentials
 2. **Terraform** >= 1.0
-3. **kubectl** for Kubernetes management
-4. **Ansible** for configuration management
+3. **Ansible** >= 2.9
+4. **SSH Key Pair** generated locally
 
-### Deployment Steps
+### Step 1: Deploy Infrastructure (Terraform)
+
 ```bash
 # Clone repository
 git clone https://github.com/acdagunes/aws-eks-terraform.git
-cd aws-eks-terraform
+cd aws-eks-terraform/terraform-iac
 
 # Set AWS credentials
-export AWS_ACCESS_KEY_ID="your_access_key"
-export AWS_SECRET_ACCESS_KEY="your_secret_key"
-export AWS_REGION="us-east-1"
+export TF_VAR_aws_access_key="your_access_key"
+export TF_VAR_aws_secret_key="your_secret_key"
 
-# Initialize and apply Terraform
-cd terraform-iac
+# Initialize and apply
 terraform init
 terraform plan
 terraform apply -auto-approve
+```
 
-# Configure kubectl
-aws eks update-kubeconfig --name my-eks-cluster --region us-east-1
+### Step 2: Configure Server (Ansible)
 
-# Verify cluster
-kubectl get nodes
+```bash
+# Update inventory with EC2 public IP
+cd ../ansible-cm
+
+# Run playbook
+ansible-playbook -i inventory.ini docker-deployment.yml
+```
+
+### Step 3: Verify Deployment
+
+```bash
+# Check running containers
+ssh ubuntu@<EC2_PUBLIC_IP> "docker ps"
+
+# Test web server
+curl http://<EC2_PUBLIC_IP>
 ```
 
 ## 🔧 Configuration
 
-### Variables (terraform.tfvars)
+### Terraform Variables (terraform.tfvars)
+
 ```hcl
-cluster_name    = "my-eks-cluster"
-cluster_version = "1.28"
-region          = "us-east-1"
-vpc_cidr        = "10.0.0.0/16"
-node_count      = 3
-instance_type   = "t3.medium"
+region        = "eu-central-1"
+instance_type = "t3.micro"
+cluster_name  = "devops-demo"
+```
+
+### Ansible Inventory (inventory.ini)
+
+```ini
+[droplet_host]
+<EC2_PUBLIC_IP> ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
 ```
 
 ## 🔒 Security Features
 
-- ✅ Private subnets for worker nodes
-- ✅ IAM roles with least-privilege access
-- ✅ Security groups with minimal open ports
-- ✅ Encrypted EBS volumes
-- ✅ VPC flow logs enabled
+- ✅ VPC network isolation
+- ✅ Security Groups with minimal open ports
+- ✅ Encrypted EBS volumes (gp3)
+- ✅ SSH key-based authentication
+- ✅ No hardcoded credentials in code
 
 ## 🎓 Skills Demonstrated
 
-- AWS Cloud Architecture
+- AWS Cloud Infrastructure (VPC, EC2, Security Groups)
 - Terraform Infrastructure as Code
-- Kubernetes (EKS) Administration
 - Ansible Configuration Management
-- VPC Networking & Security
-- IAM Policy Management
+- Ansible Roles & Playbooks
+- Docker Containerization
 - CI/CD Pipeline Integration
+- Linux System Administration
+- Network Security Best Practices
+
+## 📈 Deployment Flow
+
+```
+Terraform Apply → AWS Resources Created → Ansible Playbook → Docker Installed → Nginx Running
+      ↓                    ↓                    ↓                  ↓               ↓
+   VPC/EC2            Security Groups      Server Config      Container        Web Server
+```
 
 ## 📄 License
 

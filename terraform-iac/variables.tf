@@ -1,19 +1,10 @@
-# terraform-iac/variables.tf
+# terraform-iac/variables.tf - AWS Variables
 
-# 1. DigitalOcean Token (ჩვენი ძველი)
-variable "do_token" {
-  description = "DigitalOcean API Token from GitHub Secrets"
-  type        = string
-  sensitive   = true 
-  default     = "" # default-ი სჭირდება apply-სთვის
-}
-
-# 2. AWS კრედენციალები (კრიტიკულია!)
 variable "aws_access_key" {
   description = "AWS Access Key ID"
   type        = string
   sensitive   = true
-  default     = "" 
+  default     = ""
 }
 
 variable "aws_secret_key" {
@@ -23,17 +14,20 @@ variable "aws_secret_key" {
   default     = ""
 }
 
-# 3. საერთო კონფიგურაციები
 variable "region" {
-  description = "Cloud Region for resource creation"
+  description = "AWS Region for resource deployment"
   type        = string
-  default     = "eu-central-1" # AWS Frankfurt-ის რეგიონი
+  default     = "eu-central-1"
 }
 
 variable "cluster_name" {
-  description = "Name of the Kubernetes cluster (used for tagging)"
+  description = "Name prefix for all resources"
   type        = string
-  default     = "ansible-compose-k8s-cluster"
+  default     = "devops-demo"
 }
 
-
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t3.micro"
+}
