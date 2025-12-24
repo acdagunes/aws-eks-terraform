@@ -33,7 +33,6 @@ This project demonstrates enterprise-grade AWS infrastructure provisioning:
 - **NAT Gateway** — Outbound internet for private subnets
 
 ## 📁 Project Structure
-
 ```
 aws-eks-terraform/
 ├── terraform-iac/
@@ -61,7 +60,6 @@ aws-eks-terraform/
 4. **Ansible** for configuration management
 
 ### Deployment Steps
-
 ```bash
 # Clone repository
 git clone https://github.com/acdagunes/aws-eks-terraform.git
@@ -88,7 +86,6 @@ kubectl get nodes
 ## 🔧 Configuration
 
 ### Variables (terraform.tfvars)
-
 ```hcl
 cluster_name    = "my-eks-cluster"
 cluster_version = "1.28"
